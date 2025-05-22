@@ -1,0 +1,262 @@
+Note: make sure you test your code. You can also run part of your code while you are working on it.
+**Q1 (20 points):** An increasing subarray of an integer array is any consecutive sequence of array integers within the original array whose values strictly increase. Write a Python function find_long_subarray(A) which accepts a Python tuple
+
+$A = (a_0, a_1, . . . , a_{n−1})$
+
+of $n$ positive integers, and returns a longest increasing subarray of A, i.e. an increasing subarray with length at least as large as every other increasing subarray. For example, if $A = (1,3,4,2,7,5,6,9,8)$, your program should return either (1,3,4) and (5,6,9).
+#1
+def find_long_subarray(A):
+    if not A:
+        return ()
+    n = len(A)
+    max_len = 1
+    current_len = 1
+    max_start_index = 0
+    current_start_index = 0
+    for i in range(1, n):
+        if A[i] > A[i - 1]:
+            current_len += 1
+        else:
+            if current_len > max_len:
+                max_len = current_len
+                max_start_index = current_start_index
+            current_start_index = i
+            current_len = 1
+    if current_len > max_len:
+        max_len = current_len
+        max_start_index = current_start_index
+    return tuple(A[max_start_index:max_start_index+max_len])
+A = (1, 3, 4, 2, 7, 5, 6, 9, 8)
+print(find_long_subarray(A))
+**Q2. (20 points):**
+- (10) First implement a sorted linked list data structure by completing the code below. This data structure should store integers in ascending order and remain sorted even when updating.
+- (5) Second, write a function that takes a sorted Python list of integers and an integer, adds the integer into the list and keeps the list sorted.
+- (5) Finally, generate 10,000 random integers from 1 to 1,000,000, putting one copy into a Python list and another into an instance of your SortedLinkedList class. Then compare the time it takes to insert 1,000 new random integers from the same range into the two data structures. Use time or timeit, whichever you prefer.
+#2
+class ListNode:
+    def __init__(self, value, next=None):
+        self.value = value
+        self.next  = next
+
+class SortedLinkedList:
+    def __init__(self):
+        self.head = None
+
+    def insert(self, value):
+        new_node = ListNode(value)
+
+        # 1) Empty list? new_node becomes head
+        if self.head is None:
+            self.head = new_node
+            return
+
+        # 2) New value goes before current head?
+        if value < self.head.value:
+            new_node.next = self.head
+            self.head     = new_node
+            return
+
+        # 3) Otherwise, walk until we find the insertion point
+        current = self.head
+        # stop when next is None (end) OR next.value >= value
+        while current.next and current.next.value < value:
+            current = current.next
+
+        # splice in new_node
+        new_node.next   = current.next
+        current.next    = new_node
+
+    def print_list(self):
+        """Prints the list values in order."""
+        cur = self.head
+        while cur:
+            print(cur.value, end=' ')
+            cur = cur.next
+        print()
+
+    def to_list(self):
+        """Utility to return a Python list of values."""
+        out, cur = [], self.head
+        while cur:
+            out.append(cur.value)
+            cur = cur.next
+        return out
+
+
+# ── Quick test ─────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    sll = SortedLinkedList()
+    for x in [5, 1, 3, 2, 4]:
+        sll.insert(x)
+
+    sll.print_list()          # should print: 1 2 3 4 5
+    print(sll.to_list())      # should output: [1, 2, 3, 4, 5]
+
+
+**Q3. (30 points):**
+
+A(5): write code that generates a list of $n$ random numpy matrices with the following conditions:
+- The matrices should have random float entries between 0 and 1.
+- They should also have a random number of rows and columns between 100 and 200.
+- The number of columns of the $k$th matrix should be the same as the number of rows in the $k+1$th matrix.
+
+For example, here is an example of three valid random matrix shapes (note your matrices should be bigger, with 100-200 rows/columns), in order:
+- M1 = 4x7
+- M2 = 7x6
+- M3 = 6x4
+#3a
+import numpy as np
+import random
+
+def generate_random_matrices(n):
+    matrices = []
+
+    # Generate the first matrix with random dimensions
+    rows = random.randint(100, 200)
+    cols = random.randint(100, 200)
+    first_matrix = np.random.rand(rows, cols)
+    matrices.append(first_matrix)
+
+    for i in range(1, n):
+        # The number of rows for the next matrix is the number of columns of the current one
+        rows = cols
+        cols = random.randint(100, 200)
+        next_matrix = np.random.rand(rows, cols)
+        matrices.append(next_matrix)
+
+    return matrices
+
+random_matrices = generate_random_matrices(3)
+for i, m in enumerate(random_matrices):
+    print(f"M{i+1} shape: {m.shape}")
+B(5): write a function that calculates how many operations are needed to multiply a matrix of shape $n,m$ by one of shape $m,p$. This value is given by $m \times n \times p$.
+
+#3b
+import numpy as np
+
+def multiplication_cost(matrix1, matrix2):
+    n, m = matrix1.shape
+    m, p = matrix2.shape
+    return n * m * p
+
+# Example usage:
+matrix1 = np.random.rand(4, 5)  # Random matrix of shape 4x5
+matrix2 = np.random.rand(5, 3)  # Random matrix of shape 5x3
+cost = multiplication_cost(matrix1, matrix2)
+print("Number of operations needed:", cost)
+
+
+C(5): write a function that multiplies a list of matrices in order from left to right, returning:
+- the resulting matrix product
+- the sum of all the operations/costs
+
+Remember to use np.dot to multiply matrices.
+#3c
+import numpy as np
+
+def in_order_multiplication(list_of_matrices):
+    result = list_of_matrices[0]
+    total_operations = 0
+
+    for matrix in list_of_matrices[1:]:
+        result = np.dot(result, matrix)
+        total_operations += result.shape[0] * result.shape[1] * matrix.shape[1]
+
+    return result, total_operations
+
+# Example usage:
+matrix1 = np.random.rand(4, 5)  # Random matrix of shape 4x5
+matrix2 = np.random.rand(5, 3)  # Random matrix of shape 5x3
+matrix3 = np.random.rand(3, 2)  # Random matrix of shape 3x2
+
+result_matrix, total_operations = in_order_multiplication([matrix1, matrix2, matrix3])
+print("Resulting matrix:")
+print(result_matrix)
+print("Total number of operations:", total_operations)
+
+D(10): write a function that multiplies a list of matrices in a different order. Specifically, calculate the lowest cost pair of matrices first. Then update the costs and continue. Note this is a greedy heuristic.
+#3d
+def greedy_multiplication(list_of_matrices, total_cost=0):
+    while len(list_of_matrices) > 1:
+        costs = []
+        for i in range(len(list_of_matrices) - 1):
+            cost = multiplication_cost(list_of_matrices[i], list_of_matrices[i + 1])
+            costs.append((cost, i))
+
+        min_cost, min_index = min(costs, key=lambda x: x[0])
+        total_cost += min_cost
+        new_matrix = np.dot(list_of_matrices[min_index], list_of_matrices[min_index + 1])
+        list_of_matrices[min_index] = new_matrix
+        del list_of_matrices[min_index + 1]
+
+    result_matrix = list_of_matrices[0]
+    return result_matrix, total_cost
+
+matrix1 = np.random.rand(4, 5)  # Random matrix of shape 4x5
+matrix2 = np.random.rand(5, 3)  # Random matrix of shape 5x3
+matrix3 = np.random.rand(3, 2)  # Random matrix of shape 3x2
+lista = []
+lista.append(matrix1)
+lista.append(matrix2)
+lista.append(matrix3)
+
+
+greedy_multiplication(lista)
+
+E(5): Generate a list of 100 random matrices using the code from part (A). Multiply them first using the functions defined in C , then again with the functions defined in D, verify that the result is the same, and report the total cost of each approach.
+
+Hint: calculate the two products, subtract them from each other: the sum of the entries of the difference should be 0.
+# Generate a list of 100 random matrices
+n = 100
+random_matrices = generate_random_matrices(n)
+
+# Multiply matrices using in-order multiplication
+result_matrix_in_order, total_cost_in_order = in_order_multiplication(random_matrices.copy())
+
+# Multiply matrices using greedy multiplication
+result_matrix_greedy, total_cost_greedy = greedy_multiplication(random_matrices.copy())
+
+# Verify the results are the same
+difference = result_matrix_in_order - result_matrix_greedy
+sum_of_difference = np.sum(np.abs(difference))
+
+# Print the total costs and the verification result
+print("Total cost (in-order multiplication):", total_cost_in_order)
+print("Total cost (greedy multiplication):", total_cost_greedy)
+print("Sum of the entries of the difference:", sum_of_difference)
+
+
+
+**Q4. (14 points):**
+You are given a dataset data.csv containing sales data with the following columns: Date, Store, Product, Quantity, and Revenue. Perform the following tasks.
+
+- Read in the dataset data.csv using Pandas.
+- Using the fillna method, fill missing values with the average
+- Filter the data for stores with Quantity > 10, and use the filtered dataframe for the subsequent tasks.
+- Add a column: Revenue_per_unit by dividing the Revenue column by the Quantity column
+- Calculate the total revenue of each store using groupby and sum
+import pandas as pd
+
+# 1) Read the CSV
+df = pd.read_csv("data.csv")
+
+# 2) Fill any numeric columns’ missing values with their column-mean
+numeric_cols = df.select_dtypes(include="number").columns
+df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
+
+# 3) Keep only rows where Quantity > 10
+df = df[df["Quantity"] > 10]
+
+# 4) Add Revenue_per_unit = Revenue ÷ Quantity
+df["Revenue_per_unit"] = df["Revenue"] / df["Quantity"]
+
+# 5) Total revenue per store
+revenue_by_store = df.groupby("Store")["Revenue"].sum().reset_index()
+
+# Display results
+print("Filtered data (first 5 rows):")
+print(df.head(), "\n")
+
+print("Total revenue by store:")
+print(revenue_by_store)
+
